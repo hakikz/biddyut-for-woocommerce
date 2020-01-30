@@ -1,0 +1,17 @@
+.order_data_column.bapi_column {
+	width: 100% !important;
+}
+
+.form-field._bapi_delivery_zone_field,
+.form-field._bapi_pickup_location_field,
+.form-field._bapi_product_category_field {
+	width: 100% !important;
+}
+
+.bapi_select{
+	width: 100% !important;
+}
+
+.bapi_d_none{
+	display: none;
+}
