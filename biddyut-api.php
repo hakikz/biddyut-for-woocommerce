@@ -58,7 +58,7 @@ function bapi_api_connectivity(){
         $array = json_decode($body, true);
         global $token;
         $token = $array['response']['api_token'];
-        // print_r($array)
+        // print_r($array);
         echo '<div class="notice notice-success is-dismissible">
              <p>Biddyut API Successfully Connected and the API TOKEN is <b>'.$token.'</b></p>
          </div>';
@@ -67,13 +67,53 @@ function bapi_api_connectivity(){
         // print_r($orders);
             // Loop through each WC_Order object
             foreach( $orders as $order ){
-                echo $order->get_id() . '<br>'; // The order ID
-                echo $order->get_status() . '<br>'; // The order status
-                echo $order->get_customer_id() . '<br>'; // The order status
-                echo $order->bapi_delivery_zone . '<br>'; // The order status
-                echo $order->bapi_pickup_location . '<br>'; // The order status
-            }
+                echo "<b>Merchant Order ID:</b> ".$order->get_id() . '<br>'; // The order ID
+                echo "<b>Order Status:</b> ".$order->get_status() . '<br>'; // The order status
+                echo "<b>Customer ID:</b> ".$order->get_customer_id() . '<br>'; // The order status
+                echo "<b>Delivery Name:</b> ". $order->get_billing_first_name().' '. $order->get_billing_last_name(). '<br>'; // The order status
+                echo "<b>Delivery Email:</b> ". $order->get_billing_email(). '<br>'; // The order status
+                echo "<b>Delivery msisdn:</b> ". $order->get_billing_phone(). '<br>'; // The order status
+                echo "<b>Delivery Address:</b> ". 
+                $order->get_billing_address_1().' '.
+                $order->get_billing_address_2().', '.
+                $order->get_billing_postcode().', '.
+                $order->get_billing_city().
+                '<br>'; // The order status
+                echo "<b>Delivery Zone:</b> ".$order->bapi_delivery_zone . '<br>'; // The order status
+                echo "<b>Pickup Location:</b> ".$order->bapi_pickup_location . '<br>'; // The order status
+                echo "<b>Product Category from API Resource:</b> ".$order->bapi_product_category . '<br>'; // The order status
+                echo "<b>Pacakge:</b> ".$order->bapi_package . '<br>'; // The order status
+                echo "<b>Delivery Charge:</b> ".$order->bapi_delivery_charge . '<br>'; // The order status
+                echo "<b>Order Total Amount:</b> ".$order->get_total() . '<br>'; // The order status
 
+                $order = new WC_Order( $order->get_id() );
+                $items = $order->get_items();
+                foreach ( $items as $item ) {
+                    // echo $item_id = $item['order_item_id']. '<br>'; 
+                    // echo $product_name = $item['name']. '<br>';
+                    // echo $product_id = $item['product_id']. '<br>';
+                    // echo $quantity = $item['quantity']. '<br><br><br><br><br>';
+
+                    $last_array = array(
+                        "delivery_name" => $order->get_billing_first_name(),
+                        "delivery_email" => $order->get_billing_email(),
+                        "products" => array([
+                            "product_title" => $item['name'],
+                            "unit_price" => $item['total']
+                        ])
+                    );
+                    // $last_array = array(
+                    //     "product_title" => $item['name'],
+                    //     "unit_price" => $order->get_total()
+                    // );
+                    // print_r($last_array );
+                    $array_o[] = array_merge($last_array, $last_array);
+                    // $display[] = json_encode($array_o);
+                }
+                $main = json_encode($array_o);
+                echo $main;
+            }
+            // $order = new WC_Order( $order_id );
     }
 }
 add_action('admin_notices', 'bapi_api_connectivity');
@@ -187,12 +227,7 @@ function bapi_display_order_data_in_admin( $order ){
              <?php
                 $is_package = get_post_meta( $order->id, '_bapi_package', true );
                 
-                if($is_package == 1){
-                    $type = "Yes";
-                }
-                else{
-                    $type = "No";
-                }
+                if($is_package == 1){ $type = "Yes"; }else{ $type = "No"; }
 
                 $format = '<p class="%s"><strong>Is this a wrapping pacakage by Fulchasi?</strong>%s</p>';
                 echo sprintf($format,"bapi_d_none",$type);
@@ -201,7 +236,28 @@ function bapi_display_order_data_in_admin( $order ){
                 woocommerce_wp_radio( array(
                     'id' => '_bapi_package',
                     'label' => 'Is this a wrapping pacakage by Fulchasi?',
-                    'value' => $is_gift,
+                    'value' => $is_package,
+                    'options' => array(
+                        '0' => 'No',
+                        '1' => 'Yes'
+                    ),
+                    'style' => 'width:16px', // required for checkboxes and radio buttons
+                    'wrapper_class' => 'form-field-wide' // always add this class
+                ) );
+             ?>
+            
+             <?php
+                $is_delivery_charge = get_post_meta($order->id,'_bapi_delivery_charge',true);
+
+                if($is_delivery_charge == 1){ $charge="Yes"; }else{ $charge="No"; }
+                $format = '<p class="%s"><strong>Is this delivery charge given by customer?</strong>%s</p>';
+                echo sprintf($format,"bapi_d_none",$charge);
+
+                # Radio Button for Charge
+                woocommerce_wp_radio( array(
+                    'id' => '_bapi_delivery_charge',
+                    'label' => __('Is this delivery charge given by customer?'),
+                    'value' => $is_delivery_charge,
                     'options' => array(
                         '0' => 'No',
                         '1' => 'Yes'
@@ -220,5 +276,6 @@ function bapi_save_extra_details( $post_id, $post ){
     update_post_meta( $post_id, '_bapi_pickup_location', wc_clean( $_POST[ '_bapi_pickup_location' ] ) );
     update_post_meta( $post_id, '_bapi_product_category', wc_clean( $_POST[ '_bapi_product_category' ] ) );
     update_post_meta( $post_id, '_bapi_package', wc_clean( $_POST[ '_bapi_package' ] ) );
+    update_post_meta( $post_id, '_bapi_delivery_charge', wc_clean( $_POST[ '_bapi_delivery_charge' ] ) );
 }
 add_action( 'woocommerce_process_shop_order_meta', 'bapi_save_extra_details', 45, 2 );
