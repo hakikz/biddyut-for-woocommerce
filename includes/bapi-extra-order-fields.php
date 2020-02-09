@@ -18,17 +18,22 @@ foreach($array['response']['delivery_zones'] as $zones){
     }
     // echo $a;
 }
+array_unshift($delivery_zones, "--Select Option--");
 $delivery_zone = array_combine($delivery_zones, $delivery_zones);
 // print_r($delivery_zones);
 
 
 # This is collecting Pickup Locations from API Resources
+
+
 foreach($array['response']['pickup_locations'] as $plocations){
     foreach($plocations as $plocation){
         $pickup_locations[] = $plocation;
     }
     // echo $a;
 }
+array_unshift($pickup_locations, "--Select Option--");
+// print_r($pickup_locations);
 $pickup_location = array_combine($pickup_locations, $pickup_locations);
 
 
@@ -39,6 +44,7 @@ foreach($array['response']['product_categories'] as $pcategories){
     }
     // echo $a;
 }
+array_unshift($product_categories, "--Select Option--");
 $product_category = array_combine($product_categories, $product_categories);
 
 ?>

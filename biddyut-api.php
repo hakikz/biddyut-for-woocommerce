@@ -70,16 +70,14 @@ function bapi_woocommerce_order_status_changed( $order_id) {
         #Getting Items of this order
         $items = $order->get_items();
 
-
-
         $response1 = wp_remote_request( 'http://biddyut.publicdemo.xyz/api/v2/merchant/login?store_user=Pikaroo&store_password=rrrrr&key=7d2ApP4',
             array(
                 'method'     => 'POST'
             )
         );
 
-        $body = wp_remote_retrieve_body($response1);
-        $array = json_decode($body, true);
+        $body1 = wp_remote_retrieve_body($response1);
+        $array = json_decode($body1, true);
         $token = $array['response']['api_token'];
 
 
@@ -128,16 +126,33 @@ function bapi_woocommerce_order_status_changed( $order_id) {
 
         $body = wp_remote_retrieve_body($response);
         $array = json_decode($body, true);
-        // add_flash_notice( __("Hakik"), "warning", true );
+        // $order->update_status( 'processing' );
+        // add_flash_notice( $body, "warning", true );
+
         if($array['status_code'] != 200){
             $order->update_status( 'processing' );
-            $msg = $array['status_code']." Something Went Wrong";
-            add_flash_notice( $msg , "warning", true );
+            // The text for the note
+            $note = __("Order status still remaining Processing.");
+            $order->add_order_note( $note );
+            if($array['status_code'] != NULL){
+                $msg = "[".$array['status_code']."], ".$array['message'][0];
+                add_flash_notice($msg , "warning", true );
+            }
+            else{
+                $msg = "Some of inserted data is not matched with biddyut store. Recheck inserted fields again";
+                add_flash_notice($msg , "error", true );
+            }
+
+            // Add the note
         }
-        else{
-            $msg = "Successfully Shipped To Biddyut";
+        elseif($array['status_code'] == 200){
+            $msg = "[".$array['status_code']."], ".$array['message'][0];
             add_flash_notice( $msg , "success", true );
         }
+        // elseif($array['status_code'] != 200 && $array['status_code'] == NULL){
+        //     $msg = "Some of inserted data is not matched with biddyut store. Recheck inserted fields again";
+        //     add_flash_notice( $msg , "danger", true );
+        // }
     }
 }; 
 add_action( 'woocommerce_order_status_changed', 'bapi_woocommerce_order_status_changed', 10, 4 ); 
